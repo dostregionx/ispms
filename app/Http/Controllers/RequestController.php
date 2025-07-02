@@ -92,7 +92,7 @@ class RequestController extends Controller
         }
 
         // Send email to supply office
-        $recipientEmail = 'rocabalunajr@region10.dost.gov.ph';
+        $recipientEmail = env('SUPPLY_OFFICE_EMAIL', 'supply@region10.dost.gov.ph');
         Mail::to($recipientEmail)->send(new NewRequestNotification($requestSummary));
 
 
