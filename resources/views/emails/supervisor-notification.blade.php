@@ -1,6 +1,6 @@
-<p>Dear Supply Office,</p>
+<p>Dear {{ $supervisorName ?? 'Supervisor' }},</p>
 
-<p>This is an automated notification to inform you that a new supplies request has been submitted through the ISPMS.</p>
+<p>This is an automated notification to inform you that your staff has submitted a supplies request through the ISPMS.</p>
 
 <p><strong>Request Summary:</strong></p>
 <ul>
@@ -10,7 +10,7 @@
     <li><strong>Requested By (Emp No):</strong> {{ $requestSummary->requester }}</li>
 </ul>
 
-<p>Please log in to the system to review and/or process this request.</p>
+<p>This is for your reference. You may log in to the system to view the request if necessary.</p>
 
 <br>
 <small><i>This is a system-generated email. Please do not reply to this message.</i></small>
