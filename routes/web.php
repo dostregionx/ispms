@@ -31,7 +31,8 @@
                 Route::get('/details/{requestsummaryid}', [InventoryRequestsController::class, 'show'])->name('requests.show');
                 Route::put('/acknowledge/{requestsummaryid}', [InventoryRequestsController::class, 'acknowledge'])->name('requests.acknowledge');
                 Route::put('/serve/{requestsummaryid}', [InventoryRequestsController::class, 'serve'])->name('requests.serve');
-            });
+                Route::delete('/{requestsummaryid}', [RequestController::class, 'destroy'])->name('requests.destroy');
+	    });
 
             // Inventory Items
             Route::prefix('inventory/items')->controller(InventoryItemsController::class)->group(function () {

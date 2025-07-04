@@ -128,4 +128,16 @@ class RequestController extends Controller
     {
         return inertia('request/RequestSent');
     }
+
+    public function destroy($requestsummaryid)
+    {
+        // Delete request details first (to maintain referential integrity)
+        RequestDetailsModel::where('requestsummaryid', $requestsummaryid)->delete();
+
+        // Then delete the request summary
+        RequestSummaryModel::where('requestsummaryid', $requestsummaryid)->delete();
+
+        return response()->json(['message' => 'Request successfully deleted.']);
+    }
+
 }

@@ -1,3 +1,4 @@
+// resources/js/Pages/requests/Partials/RequestsDetails.jsx
 import React, { useEffect, useState } from "react";
 import {
     Table,
@@ -23,6 +24,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { ShowToast } from "@/Layouts/ShowToast";
+import axios from "axios";
 
 const RequestsDetails = ({
     selectedRequest,
@@ -148,9 +150,9 @@ const RequestsDetails = ({
             }));
         } catch (err) {
             ShowToast({
-                title: "Success!",
-                description: err,
-                className: "bg-green-500 text-white",
+                title: "Error!",
+                description: err.message,
+                className: "bg-red-500 text-white",
             });
         } finally {
             setProcessingAcknowledge(false);
@@ -171,8 +173,8 @@ const RequestsDetails = ({
                         ).content,
                     },
                     body: JSON.stringify({
-                        remarks: remarks,
-                        toServe: toServe,
+                        remarks,
+                        toServe,
                         summary: selectedRequest,
                     }),
                 }
@@ -221,6 +223,29 @@ const RequestsDetails = ({
         }
     };
 
+    const handleDelete = async () => {
+        try {
+            await axios.delete(`/inventory/requests/${selectedRequest.requestsummaryid}`);
+            ShowToast({
+                title: "Deleted",
+                description: "Request deleted successfully.",
+                className: "bg-red-600 text-white",
+            });
+
+            const updated = requestsData.filter(
+                (r) => r.requestsummaryid !== selectedRequest.requestsummaryid
+            );
+            setRequestsData(updated);
+            setSelectedRequest(null);
+        } catch (error) {
+            ShowToast({
+                title: "Error",
+                description: error.response?.data?.message || "Failed to delete request.",
+                className: "bg-red-600 text-white",
+            });
+        }
+    };
+
     if (!selectedRequest)
         return (
             <div className="text-sm text-muted-foreground text-center">
@@ -252,76 +277,90 @@ const RequestsDetails = ({
 
     return (
         <div className="border bg-background p-4 rounded-md shadow-sm space-y-4 text-sm">
-            <div className="flex justify-between items-center">
-                <h2 className="text-lg font-semibold text-primary">
-                    Request Summary
-                </h2>
-                {!isAcknowledged && !isServed ? (
-                    <Button
-                        onClick={handleAcknowledge}
-                        disabled={processingAcknowledge}
-                    >
-                        {processingAcknowledge
-                            ? "Processing..."
-                            : "Acknowledge"}
-                    </Button>
-                ) : isAcknowledged ? (
+            <div className="flex justify-between items-start gap-2">
+                <div>
+                    <h2 className="text-lg font-semibold text-primary">
+                        Request Summary
+                    </h2>
+                </div>
+                <div className="flex gap-2">
+                    {!isAcknowledged && !isServed && (
+                        <Button
+                            onClick={handleAcknowledge}
+                            disabled={processingAcknowledge}
+                        >
+                            {processingAcknowledge
+                                ? "Processing..."
+                                : "Acknowledge"}
+                        </Button>
+                    )}
+                    {isAcknowledged && (
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button disabled={processingServe}>
+                                    {processingServe
+                                        ? "Processing..."
+                                        : "Mark as Served"}
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle>
+                                        Confirm Serve
+                                    </AlertDialogTitle>
+                                    <AlertDialogDescription>
+                                        Proceed to mark this request as served?
+                                        This action is final.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                    <AlertDialogAction
+                                        onClick={handleMarkAsServed}
+                                        disabled={processingServe}
+                                    >
+                                        Confirm
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                    {/* Always show Delete button */}
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button disabled={processingServe}>
-                                {processingServe
-                                    ? "Processing..."
-                                    : "Mark as Served"}
-                            </Button>
+                            <Button variant="destructive">Delete</Button>
                         </AlertDialogTrigger>
                         <AlertDialogContent>
                             <AlertDialogHeader>
-                                <AlertDialogTitle>
-                                    Confirm Serve
-                                </AlertDialogTitle>
+                                <AlertDialogTitle>Delete this request?</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                    Proceed to mark this request as served? This
-                                    action is final.
+                                    This action cannot be undone. This will permanently delete the request and its items.
                                 </AlertDialogDescription>
                             </AlertDialogHeader>
                             <AlertDialogFooter>
-                                <AlertDialogCancel disabled={processingServe}>
-                                    Cancel
-                                </AlertDialogCancel>
-                                <AlertDialogAction
-                                    onClick={handleMarkAsServed}
-                                    disabled={processingServe}
-                                >
-                                    Confirm
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleDelete}>
+                                    Confirm Delete
                                 </AlertDialogAction>
                             </AlertDialogFooter>
                         </AlertDialogContent>
                     </AlertDialog>
-                ) : null}
+                </div>
             </div>
 
             <Separator />
 
             <div className="space-y-1">
-                <p>
-                    <strong>Requester:</strong> {formatName(requester)}
-                </p>
-                <p>
-                    <strong>Supervisor:</strong> {formatName(supervisor)}
-                </p>
-                <p>
-                    <strong>Purpose:</strong> {selectedRequest.purpose}
-                </p>
+                <p><strong>Requester:</strong> {formatName(requester)}</p>
+                <p><strong>Supervisor:</strong> {formatName(supervisor)}</p>
+                <p><strong>Purpose:</strong> {selectedRequest.purpose}</p>
                 <p className="text-right">
                     <strong>Date Requested:</strong>{" "}
-                    {new Date(selectedRequest.requestdate).toLocaleDateString(
-                        "en-US",
-                        {
-                            year: "numeric",
-                            month: "long",
-                            day: "numeric",
-                        }
-                    )}
+                    {new Date(selectedRequest.requestdate).toLocaleDateString("en-US", {
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                    })}
                 </p>
             </div>
 
@@ -346,8 +385,7 @@ const RequestsDetails = ({
                                 toServe.some(
                                     (i) =>
                                         i.stockno === item.stockno &&
-                                        i.requestdetailsid ===
-                                            item.requestdetailsid
+                                        i.requestdetailsid === item.requestdetailsid
                                 );
 
                             const textStyle = cn(
@@ -357,46 +395,28 @@ const RequestsDetails = ({
                             );
 
                             return (
-                                <TableRow
-                                    key={index}
-                                    className="cursor-pointer"
-                                >
-                                    <TableCell
-                                        onClick={(e) => e.stopPropagation()}
-                                    >
+                                <TableRow key={index} className="cursor-pointer">
+                                    <TableCell onClick={(e) => e.stopPropagation()}>
                                         <Checkbox
                                             checked={isScratched}
-                                            onCheckedChange={() =>
-                                                isAcknowledged &&
-                                                toggleScratch(index)
-                                            }
+                                            onCheckedChange={() => isAcknowledged && toggleScratch(index)}
                                             disabled={!isAcknowledged}
                                         />
                                     </TableCell>
-
                                     <TableCell
-                                        onClick={() =>
-                                            isAcknowledged &&
-                                            toggleScratch(index)
-                                        }
+                                        onClick={() => isAcknowledged && toggleScratch(index)}
                                         className={textStyle}
                                     >
                                         {item.item}
                                     </TableCell>
                                     <TableCell
-                                        onClick={() =>
-                                            isAcknowledged &&
-                                            toggleScratch(index)
-                                        }
+                                        onClick={() => isAcknowledged && toggleScratch(index)}
                                         className={textStyle}
                                     >
                                         {item.uom_name}
                                     </TableCell>
                                     <TableCell
-                                        onClick={() =>
-                                            isAcknowledged &&
-                                            toggleScratch(index)
-                                        }
+                                        onClick={() => isAcknowledged && toggleScratch(index)}
                                         className={textStyle}
                                     >
                                         {item.quantity}

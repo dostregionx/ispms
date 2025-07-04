@@ -6,11 +6,10 @@
 <ul>
     <li><strong>Request Date:</strong> {{ \Carbon\Carbon::parse($requestSummary->requestdate)->format('F j, Y') }}</li>
     <li><strong>Purpose:</strong> {{ $requestSummary->purpose }}</li>
-    <li><strong>Status:</strong> Pending</li>
     <li><strong>Requested By (Emp No):</strong> {{ $requestSummary->requester }}</li>
 </ul>
 
-<p>This is for your reference. You may log in to the system to view the request if necessary.</p>
+<p>This is for your reference.</p>
 
 <br>
 <small><i>This is a system-generated email. Please do not reply to this message.</i></small>
