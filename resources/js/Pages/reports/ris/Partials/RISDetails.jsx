@@ -391,7 +391,7 @@ const RISDetails = ({
                             className="border border-black px-2 text-semibold brdr-r text-13"
                             colSpan={3}
                         >
-                            <b>PAUL M. MAGLANGIT</b>
+                            <b>RAZIEL ANTONIETTE P. BAYAGNA</b>
                         </td>
                         <td
                             className="border border-black px-2 text-semibold text-13"
@@ -430,7 +430,7 @@ const RISDetails = ({
                             className="border border-black p-1 brdr-a"
                             colSpan={3}
                         >
-                            Admin Aide I / Supply Unit
+                            Admin Officer V
                         </td>
                         <td
                             className="border border-black p-1 brdr-a"
