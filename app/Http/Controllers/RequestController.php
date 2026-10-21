@@ -86,7 +86,7 @@ class RequestController extends Controller
 
         // Send email to supply office
         $recipientEmail = env('SUPPLY_OFFICE_EMAIL', 'supply@region10.dost.gov.ph');
-        Mail::to($recipientEmail)->send(new NewRequestNotification($requestSummary));
+        $this->sendNotification(fn () => Mail::to($recipientEmail)->send(new NewRequestNotification($requestSummary)));
 
         // Get supervisor and requester info
         $supervisorEmpNo = $requestSummary->supervisor;
@@ -114,14 +114,14 @@ class RequestController extends Controller
 
         // Send email to supervisor using custom mailable
         if ($supervisorEmail) {
-            Mail::to($supervisorEmail)->send(new SupervisorNotification(
+            $this->sendNotification(fn () => Mail::to($supervisorEmail)->send(new SupervisorNotification(
                 $requestSummary,
                 $requesterName,
                 $supervisorName
-            ));
+            )));
         }
 
-        return back()->with('message', 'Your order has been sent!');
+        return back()->with('message', 'Your request has been saved successfully.');
     }
 
     public function requestSent()
@@ -138,6 +138,21 @@ class RequestController extends Controller
         RequestSummaryModel::where('requestsummaryid', $requestsummaryid)->delete();
 
         return response()->json(['message' => 'Request successfully deleted.']);
+    }
+
+
+    private function sendNotification(callable $send): void
+    {
+        try {
+            $send();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning(
+                'ISPMS email notification failed; transaction remains saved.',
+                ['controller' => static::class,
+                 'exception_class' => get_class($e),
+                 'exception_code' => $e->getCode()]
+            );
+        }
     }
 
 }

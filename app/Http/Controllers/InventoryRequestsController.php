@@ -106,9 +106,9 @@ class InventoryRequestsController extends Controller
                 'requestSummary' => $requestSummary,
             ];
 
-            Mail::to($recipientEmail)->send(new RequestAcknowledgedMail($data));
+            $this->sendNotification(fn () => Mail::to($recipientEmail)->send(new RequestAcknowledgedMail($data)));
 
-            return response()->json(['message' => 'Request acknowledged and email sent.']);
+            return response()->json(['message' => 'Request acknowledged successfully.']);
         }
 
         return response()->json(['message' => 'Request summary not found.'], 404);
@@ -135,11 +135,11 @@ class InventoryRequestsController extends Controller
         $recipientEmail = $this->get_employee_email($requestSummary->requester);
 
 
-        Mail::to($recipientEmail)->send(new RequestReadyForPickupMail([
+        $this->sendNotification(fn () => Mail::to($recipientEmail)->send(new RequestReadyForPickupMail([
             'requestSummary' => $requestSummary
-        ]));
+        ])));
 
-        return response()->json(['message' => 'Request has been served and email sent successfully.']);
+        return response()->json(['message' => 'Request has been served successfully.']);
     }
 
     public function get_employee_email($empNumber)
@@ -148,6 +148,21 @@ class InventoryRequestsController extends Controller
             ->where('empNumber', $empNumber)
             ->select(DB::raw('COALESCE(work_email, email) as email'))
             ->value('email'); // this gets the single email value
+    }
+
+
+    private function sendNotification(callable $send): void
+    {
+        try {
+            $send();
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning(
+                'ISPMS email notification failed; transaction remains saved.',
+                ['controller' => static::class,
+                 'exception_class' => get_class($e),
+                 'exception_code' => $e->getCode()]
+            );
+        }
     }
 
 }
